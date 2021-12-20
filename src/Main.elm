@@ -1,5 +1,7 @@
 module Main exposing (..)
 
+import Bootstrap.CDN as CDN
+import Bootstrap.Grid as Grid
 import Browser
 import Html exposing (Html, button, div, text)
 import Html.Events exposing (onClick)
@@ -52,8 +54,15 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ button [ onClick Decrement ] [ text "-" ]
-        , div [] [ text (String.fromInt model) ]
-        , button [ onClick Increment ] [ text "+" ]
+    Grid.container []
+        [ CDN.stylesheet
+        , Grid.row []
+            [ Grid.col []
+                [ div []
+                    [ button [ onClick Decrement ] [ text "-" ]
+                    , div [] [ text (String.fromInt model) ]
+                    , button [ onClick Increment ] [ text "+" ]
+                    ]
+                ]
+            ]
         ]

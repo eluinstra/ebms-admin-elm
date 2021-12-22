@@ -17,7 +17,23 @@ printf "export PATH=~/.npm-global/bin:$PATH" >> ~/.profile
 ``` bash
 npm install -g elm elm-test elm-format
 ```
-## Start elm server
+## Start elm server (only for development)
 ``` bash
 elm reactor
+```
+## Install elm-live
+``` bash
+npm install -g elm-live
+```
+## Watch files
+``` bash
+elm-live src/Main.elm src/Home.elm -- --output=elm.js
+```
+## Install http-server
+``` bash
+npm install -g http-server-spa
+```
+## Run http-server
+``` bash
+http-server-spa .
 ```

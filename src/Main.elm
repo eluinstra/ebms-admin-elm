@@ -1,20 +1,13 @@
 module Main exposing (main)
 
 import About as About
-import Bootstrap.Button as Button
-import Bootstrap.Card as Card
-import Bootstrap.Card.Block as Block
 import Bootstrap.Grid as Grid
-import Bootstrap.Grid.Col as Col
-import Bootstrap.ListGroup as Listgroup
-import Bootstrap.Modal as Modal
 import Bootstrap.Navbar as Navbar
 import Browser exposing (UrlRequest)
 import Browser.Navigation as Navigation
 import Home as Home
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
 import Url exposing (Url)
 import Url.Parser as Parser exposing ((</>), Parser)
 
@@ -54,7 +47,7 @@ main =
 
 
 init : Flags -> Url -> Navigation.Key -> ( Model, Cmd Msg )
-init flags url key =
+init _ url key =
     let
         ( navState, navCmd ) =
             Navbar.initialState NavMsg
@@ -69,11 +62,23 @@ type Msg
     = UrlChange Url
     | ClickedLink UrlRequest
     | NavMsg Navbar.State
+    | HomeMsg Home.Msg
+    | AboutMsg About.Msg
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Navbar.subscriptions model.navState NavMsg
+
+
+toHome : Model -> ( Home.Model, Cmd Home.Msg ) -> ( Model, Cmd Msg )
+toHome model ( homeModel, cmd ) =
+    ( { model | page = HomePage homeModel }, Cmd.map HomeMsg cmd )
+
+
+toAbout : Model -> ( About.Model, Cmd About.Msg ) -> ( Model, Cmd Msg )
+toAbout model ( aboutModel, cmd ) =
+    ( { model | page = AboutPage aboutModel }, Cmd.map AboutMsg cmd )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -91,9 +96,25 @@ update msg model =
             urlUpdate url model
 
         NavMsg state ->
-            ( { model | navState = state }
-            , Cmd.none
-            )
+            ( { model | navState = state }, Cmd.none )
+
+        HomeMsg homeMsg ->
+            case model.page of
+                HomePage homeModel ->
+                    -- ( { model | page = homeModel |> HomePage }, Cmd.none )
+                    Home.update homeMsg homeModel |> toHome model
+
+                _ ->
+                    ( model, Cmd.none )
+
+        AboutMsg aboutMsg ->
+            case model.page of
+                AboutPage aboutModel ->
+                    -- ( { model | page = aboutModel |> AboutPage }, Cmd.none )
+                    About.update aboutMsg aboutModel |> toAbout model
+
+                _ ->
+                    ( model, Cmd.none )
 
 
 urlUpdate : Url -> Model -> ( Model, Cmd Msg )
@@ -103,16 +124,17 @@ urlUpdate url model =
             ( { model | page = NotFound }, Cmd.none )
 
         Just Home ->
-            ( { model | page = Tuple.first (Home.init ()) |> HomePage }, Cmd.none )
+            -- ( { model | page = Tuple.first (Home.init ()) |> HomePage }, Cmd.none )
+            Home.init () |> toHome model
 
         Just About ->
-            ( { model | page = Tuple.first (About.init ()) |> AboutPage }, Cmd.none )
+            -- ( { model | page = Tuple.first (About.init ()) |> AboutPage }, Cmd.none )
+            About.init () |> toAbout model
 
 
 decode : Url -> Maybe Route
 decode url =
-    { url | path = Maybe.withDefault "" url.fragment, fragment = Nothing }
-        |> Parser.parse routeParser
+    { url | path = Maybe.withDefault "" url.fragment, fragment = Nothing } |> Parser.parse routeParser
 
 
 routeParser : Parser (Route -> a) a
@@ -142,7 +164,51 @@ menu model =
         |> Navbar.container
         |> Navbar.brand [ href "#" ] [ img [ src "images/ebms_admin.gif" ] [] ]
         |> Navbar.items
-            [ Navbar.itemLink [ href "#getting-started" ] [ text "Getting started" ]
+            [ Navbar.dropdown
+                { id = "cpasDropdown"
+                , toggle = Navbar.dropdownToggle [] [ text "CPA Service" ]
+                , items =
+                    [ Navbar.dropdownItem
+                        [ href "#" ]
+                        [ text "CPAs" ]
+                    , Navbar.dropdownDivider
+                    , Navbar.dropdownItem
+                        [ href "#" ]
+                        [ text "Url Mappings" ]
+                    , Navbar.dropdownDivider
+                    , Navbar.dropdownItem
+                        [ href "#" ]
+                        [ text "Certificate Mappings" ]
+                    ]
+                }
+            , Navbar.dropdown
+                { id = "messagesDropdown"
+                , toggle = Navbar.dropdownToggle [] [ text "Message Service" ]
+                , items =
+                    [ Navbar.dropdownItem
+                        [ href "#" ]
+                        [ text "Ping" ]
+                    , Navbar.dropdownDivider
+                    , Navbar.dropdownItem
+                        [ href "#" ]
+                        [ text "Unprocessed Messages" ]
+                    , Navbar.dropdownDivider
+                    , Navbar.dropdownItem
+                        [ href "#" ]
+                        [ text "Message Events" ]
+                    , Navbar.dropdownDivider
+                    , Navbar.dropdownItem
+                        [ href "#" ]
+                        [ text "Send Message" ]
+                    , Navbar.dropdownItem
+                        [ href "#" ]
+                        [ text "Resend Message" ]
+                    , Navbar.dropdownDivider
+                    , Navbar.dropdownItem
+                        [ href "#" ]
+                        [ text "Message Status" ]
+                    ]
+                }
             , Navbar.itemLink [ href "#about" ] [ text "About" ]
             ]
         |> Navbar.view model.navState
@@ -151,21 +217,12 @@ menu model =
 mainContent : Model -> Html Msg
 mainContent model =
     Grid.container [] <|
-    case model.page of
-        HomePage homeModel ->
-            -- Home.view homeModel
-            [text "HomePage"]
+        case model.page of
+            HomePage homeModel ->
+                [ Home.view homeModel |> Html.map HomeMsg ]
 
-        AboutPage aboutModel ->
-            [text "About"]
+            AboutPage aboutModel ->
+                [ About.view aboutModel |> Html.map AboutMsg ]
 
-        NotFound ->
-            [text "Page Not Found"]
-
-
-
--- pageNotFound : List (Html Msg)
--- pageNotFound =
---     [ h1 [] [ text "Not found" ]
---     , text "SOrry couldn't find that page"
---     ]
+            NotFound ->
+                [ h1 [] [ text "Page Not Found" ] ]

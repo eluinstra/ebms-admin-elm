@@ -3,6 +3,7 @@ module Home exposing (Model, Msg, init, update, view)
 import Browser
 import Html exposing (..)
 
+
 main : Program () Model Msg
 main =
     Browser.element
@@ -12,19 +13,33 @@ main =
         , subscriptions = \_ -> Sub.none
         }
 
-type alias Model = {}
+
+type alias Model =
+    {}
+
 
 initialModel : Model
-initialModel = {}
+initialModel =
+    {}
+
 
 init : () -> ( Model, Cmd Msg )
-init () = ( initialModel, Cmd.none )
+init () =
+    ( initialModel, Cmd.none )
 
-type alias Msg = {}
 
-update : Msg -> Model -> (Model, Cmd Msg)
-update _ m = ( m, Cmd.none )
+type alias Msg =
+    {}
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update _ m =
+    ( m, Cmd.none )
+
 
 view : Model -> Html Msg
 view _ =
-    div [] [ text "Welcome to the EbMS Admin Console" ]
+    div []
+        [ h1 [] [ text "Home" ]
+        , text "Welcome to the EbMS Admin Console"
+        ]

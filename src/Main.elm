@@ -8,6 +8,7 @@ import Browser.Navigation as Navigation
 import Home as Home
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Ping as Ping
 import Url exposing (Url)
 import Url.Parser as Parser exposing ((</>), Parser)
 
@@ -26,11 +27,13 @@ type alias Model =
 type Page
     = HomePage Home.Model
     | AboutPage About.Model
+    | PingPage Ping.Model
     | NotFound
 
 
 type Route
     = Home
+    | Ping
     | About
 
 
@@ -63,6 +66,7 @@ type Msg
     | ClickedLink UrlRequest
     | NavMsg Navbar.State
     | HomeMsg Home.Msg
+    | PingMsg Ping.Msg
     | AboutMsg About.Msg
 
 
@@ -74,6 +78,11 @@ subscriptions model =
 toHome : Model -> ( Home.Model, Cmd Home.Msg ) -> ( Model, Cmd Msg )
 toHome model ( homeModel, cmd ) =
     ( { model | page = HomePage homeModel }, Cmd.map HomeMsg cmd )
+
+
+toPing : Model -> ( Ping.Model, Cmd Ping.Msg ) -> ( Model, Cmd Msg )
+toPing model ( pingModel, cmd ) =
+    ( { model | page = PingPage pingModel }, Cmd.map PingMsg cmd )
 
 
 toAbout : Model -> ( About.Model, Cmd About.Msg ) -> ( Model, Cmd Msg )
@@ -107,6 +116,15 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        PingMsg pingMsg ->
+            case model.page of
+                PingPage pingModel ->
+                    -- ( { model | page = pingModel |> PingPage }, Cmd.none )
+                    Ping.update pingMsg pingModel |> toPing model
+
+                _ ->
+                    ( model, Cmd.none )
+
         AboutMsg aboutMsg ->
             case model.page of
                 AboutPage aboutModel ->
@@ -127,6 +145,10 @@ urlUpdate url model =
             -- ( { model | page = Tuple.first (Home.init ()) |> HomePage }, Cmd.none )
             Home.init () |> toHome model
 
+        Just Ping ->
+            -- ( { model | page = Tuple.first (Ping.init ()) |> PingPage }, Cmd.none )
+            Ping.init () |> toPing model
+
         Just About ->
             -- ( { model | page = Tuple.first (About.init ()) |> AboutPage }, Cmd.none )
             About.init () |> toAbout model
@@ -141,6 +163,7 @@ routeParser : Parser (Route -> a) a
 routeParser =
     Parser.oneOf
         [ Parser.map Home Parser.top
+        , Parser.map Ping (Parser.s "ping")
         , Parser.map About (Parser.s "about")
         ]
 
@@ -186,7 +209,7 @@ menu model =
                 , toggle = Navbar.dropdownToggle [] [ text "Message Service" ]
                 , items =
                     [ Navbar.dropdownItem
-                        [ href "#" ]
+                        [ href "#ping" ]
                         [ text "Ping" ]
                     , Navbar.dropdownDivider
                     , Navbar.dropdownItem
@@ -220,6 +243,9 @@ mainContent model =
         case model.page of
             HomePage homeModel ->
                 [ Home.view homeModel |> Html.map HomeMsg ]
+
+            PingPage pingModel ->
+                [ Ping.view pingModel |> Html.map PingMsg ]
 
             AboutPage aboutModel ->
                 [ About.view aboutModel |> Html.map AboutMsg ]

@@ -27,7 +27,7 @@ npm install -g elm-live
 ```
 ## Watch files
 ``` bash
-elm-live src/Main.elm src/Home.elm src/About.elm -- --output=elm.js
+elm-live src/Main.elm --no-server -- --output=elm.js
 ```
 ## Install http-server
 ``` bash
@@ -35,5 +35,5 @@ npm install -g http-server-spa
 ```
 ## Run http-server
 ``` bash
-http-server-spa .
+http-server-spa . index.html 8000
 ```
